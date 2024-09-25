@@ -4,26 +4,54 @@ import 'package:flutter/material.dart';
 class MyDrawer extends StatelessWidget {
   const MyDrawer({super.key});
 
-  void signUserOut() {
-    FirebaseAuth.instance.signOut();
+  void signUserOut(BuildContext context) {
+    FirebaseAuth.instance.signOut().then((_) {
+      Navigator.pushNamedAndRemoveUntil(context, '/auth_page', (route) => false); // Đưa người dùng về trang đăng nhập sau khi đăng xuất
+    });
   }
+
+  void showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Confirm Logout"),
+        content: Text("Are you sure you want to log out?"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Đóng hộp thoại
+            },
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Đóng hộp thoại trước khi đăng xuất
+              signUserOut(context); // Gọi hàm đăng xuất
+            },
+            child: Text("Logout"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      // backgroundColor: Theme.of(context).colorScheme.surface,
       backgroundColor: Colors.white,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(
             children: [
-              //drawer header
+              // drawer header
               const DrawerHeader(
-                  child: Icon(
-                Icons.favorite,
-                color: Colors.red,
-              )),
-              //home title
+                child: Icon(
+                  Icons.favorite,
+                  color: Colors.red,
+                ),
+              ),
+              // home title
               Padding(
                 padding: const EdgeInsets.only(left: 25),
                 child: ListTile(
@@ -38,7 +66,7 @@ class MyDrawer extends StatelessWidget {
                 ),
               ),
 
-              //add_screen
+              // camera page
               Padding(
                 padding: const EdgeInsets.only(left: 25),
                 child: ListTile(
@@ -49,14 +77,12 @@ class MyDrawer extends StatelessWidget {
                   title: Text("C A M E R A"),
                   onTap: () {
                     Navigator.pop(context);
-
-                    // navigate to camera page
                     Navigator.pushNamed(context, '/camera_page');
                   },
                 ),
               ),
 
-              //profile title
+              // profile page
               Padding(
                 padding: const EdgeInsets.only(left: 25),
                 child: ListTile(
@@ -66,16 +92,13 @@ class MyDrawer extends StatelessWidget {
                   ),
                   title: Text("P R O F I L E"),
                   onTap: () {
-                    // pop drawer
                     Navigator.pop(context);
-
-                    // navigate to profile page
                     Navigator.pushNamed(context, '/profile_page');
                   },
                 ),
               ),
 
-              //user title
+              // users page
               Padding(
                 padding: const EdgeInsets.only(left: 25),
                 child: ListTile(
@@ -85,11 +108,24 @@ class MyDrawer extends StatelessWidget {
                   ),
                   title: Text("U S E R S"),
                   onTap: () {
-                    // pop drawer
                     Navigator.pop(context);
-
-                    // navigate to profile page
                     Navigator.pushNamed(context, '/users_page');
+                  },
+                ),
+              ),
+
+              // notification page
+              Padding(
+                padding: const EdgeInsets.only(left: 25),
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.notifications,
+                    color: Colors.black,
+                  ),
+                  title: Text("N O T I F I C A T I O N S"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/notification_page');
                   },
                 ),
               ),
@@ -105,9 +141,7 @@ class MyDrawer extends StatelessWidget {
               ),
               title: Text("L O G O U T"),
               onTap: () {
-                Navigator.pop(context);
-
-                signUserOut();
+                showLogoutDialog(context); // Hiển thị hộp thoại xác nhận đăng xuất
               },
             ),
           ),

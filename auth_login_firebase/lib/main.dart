@@ -3,6 +3,7 @@ import 'package:auth_login_firebase/auth/login_or_register_page.dart';
 import 'package:auth_login_firebase/auth/login_page.dart';
 import 'package:auth_login_firebase/pages/camera_page.dart';
 import 'package:auth_login_firebase/pages/home_page.dart';
+import 'package:auth_login_firebase/pages/notification_page.dart';
 import 'package:auth_login_firebase/pages/profile_page.dart';
 import 'package:auth_login_firebase/pages/users_page.dart';
 import 'package:camera/camera.dart';
@@ -36,6 +37,9 @@ class MyApp extends StatelessWidget {
         '/camera_page' : (context) => CameraPage(cameras: cameras,),
         '/profile_page' : (context) => ProfilePage(),
         '/users_page' : (context) => const UsersPage(),
+        '/notification_page': (context) =>  NotificationPage(),
+        '/auth_page': (context) => const AuthPage(),
+        
       },
     );
   }

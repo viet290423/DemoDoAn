@@ -64,16 +64,18 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   // create a user document and collect them in firestore
-  Future<void> createUserDocument(UserCredential? userCredential) async {
+ Future<void> createUserDocument(UserCredential? userCredential) async {
     if (userCredential != null && userCredential.user != null) {
       await FirebaseFirestore.instance
           .collection("User")
           .doc(userCredential.user!.email)
           .set({
+        'uid': userCredential.user!.uid,
         'email': userCredential.user!.email,
         'username': usernameController.text,
+        'listFriend': [],
       });
-    }
+    } 
   }
 
   //wrong email message popup
