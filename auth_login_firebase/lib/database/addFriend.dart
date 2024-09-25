@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AddFriendService {
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+
   // Hàm gửi yêu cầu kết bạn
   Future<void> sendFriendRequest(String friendUid) async {
     try {
@@ -18,7 +20,7 @@ class AddFriendService {
       // Truy vấn thông tin người dùng hiện tại từ Firestore
       DocumentSnapshot currentUserDoc = await FirebaseFirestore.instance
           .collection('User')
-          .doc(currentUserUid)
+          .doc(currentUser!.email)
           .get();
 
       // Lấy dữ liệu người dùng hiện tại
