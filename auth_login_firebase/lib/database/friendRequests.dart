@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +15,7 @@ class FriendRequestsService {
         debugPrint('Người dùng hiện tại không tồn tại.');
         return [];
       }
+      debugPrint('UID người dùng hiện tại: ${currentUser}');
 
       // Lấy các yêu cầu kết bạn từ collection FriendRequests
       DocumentSnapshot<Map<String, dynamic>> requestsDoc =
@@ -39,6 +42,7 @@ class FriendRequestsService {
   // Chấp nhận yêu cầu kết bạn
   Future<void> acceptFriendRequest(Map<String, dynamic> friendRequest) async {
     try {
+      // Lấy người dùng hiện tại
       User? currentUser = FirebaseAuth.instance.currentUser;
 
       if (currentUser == null) {
@@ -46,22 +50,62 @@ class FriendRequestsService {
         return;
       }
 
-      String currentUserEmail = currentUser.email ?? '';
+      String currentUserUid = currentUser.uid; // Lấy UID của người dùng hiện tại
+      String currentUserEmail = currentUser.email ?? ''; // Lấy email của người dùng hiện tại
 
+      debugPrint('UID người dùng hiện tại: $currentUserUid');
+      debugPrint("Email người dùng hiện tại: $currentUserEmail");
+
+       // Tìm kiếm thông tin của người gửi trong collection 'User'
+      DocumentSnapshot<Map<String, dynamic>> currentDoc = await FirebaseFirestore.instance
+          .collection('User')
+          .doc(currentUserEmail)
+          .get();
+
+      // Kiểm tra nếu dữ liệu của người gửi tồn tại
+      if (!currentDoc.exists) {
+        debugPrint('Không tìm thấy thông tin người dùng hiện tại.');
+        return;
+      }
+
+      Map<String, dynamic>? currentData = currentDoc.data();
+      String Display = currentData?['username'] ?? 'Unknown';
+
+      debugPrint('Tên người dùng hiện tại: $Display');
+      
       // Xóa yêu cầu kết bạn khỏi FriendRequests sau khi chấp nhận
       await FirebaseFirestore.instance
           .collection('FriendRequests')
-          .doc(currentUserEmail)
+          .doc(currentUserUid) // Sử dụng UID để làm ID của tài liệu
           .update({
         'requests': FieldValue.arrayRemove([friendRequest])
       });
 
-      // Thêm người bạn vào danh sách bạn bè (có thể lưu vào một collection Friends hoặc thực hiện logic khác)
+      // Thêm bạn vào danh sách bạn bè trong collection User
       await FirebaseFirestore.instance
-          .collection('Friends')
-          .doc(currentUserEmail)
+          .collection('User')
+          .doc(currentUserEmail) // Sử dụng email của người dùng hiện tại
           .update({
-        'friends': FieldValue.arrayUnion([friendRequest])
+        'listFriend': FieldValue.arrayUnion([
+          {
+            'email': friendRequest['email'], // email của người bạn
+            'username': friendRequest['username'], // Tên người bạn
+          }
+        ])
+      });
+
+      // Thêm người dùng hiện tại vào danh sách bạn bè của người gửi yêu cầu
+      await FirebaseFirestore.instance
+          .collection('User')
+          .doc(friendRequest[
+              'email']) // Sử dụng email của người gửi yêu cầu kết bạn
+          .update({
+        'listFriend': FieldValue.arrayUnion([
+          {
+            'email': currentUserEmail, // email của người dùng hiện tại
+            'username': Display, // Tên của người dùng hiện tại
+          }
+        ])
       });
 
       debugPrint('Đã chấp nhận yêu cầu kết bạn.');
