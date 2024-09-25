@@ -62,7 +62,7 @@ class FriendSearchDelegate extends SearchDelegate {
                 onPressed: () {
                   _searchFriendService.sendFriendRequest(user['uid']); // Gửi yêu cầu kết bạn
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Friend request sent to ${user['uid']}')),
+                    SnackBar(content: Text('Friend request sent to ${user['username']}.')),
                   );
                 },
               ),

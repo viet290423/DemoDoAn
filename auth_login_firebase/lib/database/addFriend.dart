@@ -3,75 +3,62 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AddFriendService {
-  final User? currentUser = FirebaseAuth.instance.currentUser;
-
-  // Hàm gửi yêu cầu kết bạn
-  Future<void> sendFriendRequest(String friendUid) async {
+  // Gửi yêu cầu kết bạn
+  Future<void> sendFriendRequest(String recipientEmail) async {
     try {
-      // Lấy UID của người dùng hiện tại (người gửi yêu cầu kết bạn)
-      String? currentUserUid = FirebaseAuth.instance.currentUser?.uid;
-      debugPrint("UID người gửi yêu cầu: $currentUserUid");
+      // Lấy thông tin người dùng hiện tại (người gửi yêu cầu kết bạn)
+      User? currentUser = FirebaseAuth.instance.currentUser;
 
-      if (currentUserUid == null) {
-        debugPrint("Không tìm thấy UID của người dùng hiện tại.");
+      if (currentUser == null) {
+        debugPrint('Người dùng hiện tại không tồn tại.');
         return;
       }
 
-      // Truy vấn thông tin người dùng hiện tại từ Firestore
-      DocumentSnapshot currentUserDoc = await FirebaseFirestore.instance
+      String currentUserEmail = currentUser.email ?? '';
+      
+      // Tìm kiếm thông tin của người gửi trong collection 'User'
+      DocumentSnapshot<Map<String, dynamic>> senderDoc = await FirebaseFirestore.instance
           .collection('User')
-          .doc(currentUser!.email)
+          .doc(currentUserEmail)
           .get();
 
-      // Lấy dữ liệu người dùng hiện tại
-      Map<String, dynamic>? currentUserData = currentUserDoc.data() as Map<String, dynamic>?;
-      debugPrint("Thông tin người dùng hiện tại: $currentUserData");
-
-
-      // Kiểm tra và lấy thông tin người dùng hiện tại
-      String currentUsername = currentUserData?['username'] ?? 'Unknown';
-      String currentEmail = currentUserData?['email'] ?? 'Unknown';
-      String currentProfileImage = currentUserData?['profile_image'] ?? 'default_profile_image_url';
-
-      // Cấu trúc yêu cầu kết bạn
-      Map<String, dynamic> friendRequestData = {
-        'uid': currentUserUid,
-        'username': currentUsername,
-        'email': currentEmail,
-        'profile_image': currentProfileImage,
-      };
-
-      // Truy vấn thông tin người nhận (friendUid) từ Firestore
-      DocumentSnapshot friendUserDoc = await FirebaseFirestore.instance
-          .collection('User')
-          .doc(friendUid)
-          .get();
-
-      // Kiểm tra xem người nhận yêu cầu kết bạn có tồn tại không
-      if (!friendUserDoc.exists) {
-        throw Exception('Người nhận yêu cầu kết bạn không tồn tại.');
+      // Kiểm tra nếu dữ liệu của người gửi tồn tại
+      if (!senderDoc.exists) {
+        debugPrint('Không tìm thấy thông tin người dùng hiện tại.');
+        return;
       }
 
-      // Lấy document của người nhận yêu cầu kết bạn từ Firestore (collection 'FriendRequests')
-      DocumentReference friendRequestDoc = FirebaseFirestore.instance
-          .collection('FriendRequests')
-          .doc(friendUid);
+      // Lấy các thông tin của người gửi
+      Map<String, dynamic>? senderData = senderDoc.data();
+      String senderUsername = senderData?['username'] ?? 'Unknown';
+      String senderProfileImage = senderData?['profile_image'] ?? 'default_profile_image_url';
+      String senderEmail = senderData?['email'] ?? '';
+      Timestamp requestTime = Timestamp.now(); // Lấy thời gian gửi yêu cầu
 
-      // Thêm yêu cầu kết bạn vào field "list" trong tài liệu của người nhận
-      await friendRequestDoc.update({
-        'list': FieldValue.arrayUnion([friendRequestData])
+      // Tạo map chứa thông tin người gửi
+      Map<String, dynamic> senderInfo = {
+        'username': senderUsername,
+        'email': senderEmail,
+        'profile_image': senderProfileImage,
+        'time': requestTime
+      };
+
+      // Truy cập vào collection FriendRequests của người nhận (theo email)
+      DocumentReference recipientDoc = FirebaseFirestore.instance
+          .collection('FriendRequests')
+          .doc(recipientEmail);
+
+      // Cập nhật hoặc thêm mới yêu cầu kết bạn vào mảng yêu cầu kết bạn của người nhận
+      await recipientDoc.update({
+        'requests': FieldValue.arrayUnion([senderInfo]) // Thêm thông tin người gửi vào mảng 'requests'
       }).catchError((error) async {
-        // Nếu document không tồn tại, tạo document mới
-        if (error is FirebaseException && error.code == 'not-found') {
-          await friendRequestDoc.set({
-            'list': [friendRequestData]
-          });
-        } else {
-          throw error; // Nếu lỗi khác, ném lỗi ra
-        }
+        // Nếu doc của người nhận chưa tồn tại, tạo mới
+        await recipientDoc.set({
+          'requests': [senderInfo]
+        });
       });
 
-      debugPrint('Gửi yêu cầu kết bạn thành công đến $friendUid');
+      debugPrint('Yêu cầu kết bạn đã được gửi thành công.');
     } catch (e) {
       debugPrint('Lỗi khi gửi yêu cầu kết bạn: $e');
     }

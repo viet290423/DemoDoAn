@@ -1,6 +1,5 @@
-import 'package:auth_login_firebase/database/friendRequests.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:auth_login_firebase/database/friendRequests.dart';
 
 class NotificationPage extends StatefulWidget {
   @override
@@ -8,71 +7,66 @@ class NotificationPage extends StatefulWidget {
 }
 
 class _NotificationPageState extends State<NotificationPage> {
-  final FriendRequestsService _friendRequestsService = FriendRequestsService();
-  List<Map<String, dynamic>> _friendRequests = [];
+  FriendRequestsService friendRequestsService = FriendRequestsService();
+  List<Map<String, dynamic>> friendRequests = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchFriendRequests();
+    _loadFriendRequests();
   }
 
-  // Lấy yêu cầu kết bạn
-  void _fetchFriendRequests() async {
-    List<Map<String, dynamic>> requests = await _friendRequestsService.getFriendRequests();
+  Future<void> _loadFriendRequests() async {
+    List<Map<String, dynamic>> requests = await friendRequestsService.getFriendRequests();
     setState(() {
-      _friendRequests = requests;
+      friendRequests = requests;
     });
   }
 
-  // Chấp nhận yêu cầu kết bạn
-  void _acceptRequest(String requestId) async {
-    // Cập nhật trạng thái yêu cầu kết bạn
-    await FirebaseFirestore.instance.collection('FriendRequests').doc(requestId).update({
-      'status': 'accepted',
-    });
-    _fetchFriendRequests(); // Cập nhật lại danh sách
+  void _acceptFriendRequest(Map<String, dynamic> request) async {
+    await friendRequestsService.acceptFriendRequest(request);
+    _loadFriendRequests(); // Cập nhật lại danh sách sau khi chấp nhận
   }
 
-  // Xóa yêu cầu kết bạn
-  void _deleteRequest(String requestId) async {
-    await FirebaseFirestore.instance.collection('FriendRequests').doc(requestId).delete();
-    _fetchFriendRequests(); // Cập nhật lại danh sách
+  void _declineFriendRequest(Map<String, dynamic> request) async {
+    await friendRequestsService.declineFriendRequest(request);
+    _loadFriendRequests(); // Cập nhật lại danh sách sau khi xóa
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Friend Requests'),
+        title: Text('Yêu cầu kết bạn'),
       ),
-      body: ListView.builder(
-        itemCount: _friendRequests.length,
-        itemBuilder: (context, index) {
-          final request = _friendRequests[index];
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundImage: NetworkImage(request['profile_image'] ?? ''),
-              backgroundColor: Colors.grey,
+      body: friendRequests.isEmpty
+          ? Center(child: Text('Không có yêu cầu kết bạn.'))
+          : ListView.builder(
+              itemCount: friendRequests.length,
+              itemBuilder: (context, index) {
+                Map<String, dynamic> request = friendRequests[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(request['profile_image'] ?? 'default_profile_image_url'),
+                  ),
+                  title: Text(request['username'] ?? 'Unknown'),
+                  subtitle: Text(request['email'] ?? ''),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.check, color: Colors.green),
+                        onPressed: () => _acceptFriendRequest(request),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.clear, color: Colors.red),
+                        onPressed: () => _declineFriendRequest(request),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            title: Text(request['sendername']),
-            subtitle: Text(request['senderEmail']),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.check),
-                  onPressed: () => _acceptRequest(request['requestId']),
-                ),
-                IconButton(
-                  icon: Icon(Icons.clear),
-                  onPressed: () => _deleteRequest(request['requestId']),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
     );
   }
 }
