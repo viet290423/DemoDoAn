@@ -15,7 +15,7 @@ class FriendRequestsService {
         debugPrint('Người dùng hiện tại không tồn tại.');
         return [];
       }
-      debugPrint('UID người dùng hiện tại: ${currentUser}');
+
 
       // Lấy các yêu cầu kết bạn từ collection FriendRequests
       DocumentSnapshot<Map<String, dynamic>> requestsDoc =
@@ -70,6 +70,7 @@ class FriendRequestsService {
 
       Map<String, dynamic>? currentData = currentDoc.data();
       String Display = currentData?['username'] ?? 'Unknown';
+      String currentProfileImage = currentData?['profile_image'] ?? 'default_profile_image_url';
 
       debugPrint('Tên người dùng hiện tại: $Display');
       
@@ -90,6 +91,7 @@ class FriendRequestsService {
           {
             'email': friendRequest['email'], // email của người bạn
             'username': friendRequest['username'], // Tên người bạn
+            'profile_image': friendRequest['profile_image'], // Ảnh đại diện của người bạn
           }
         ])
       });
@@ -104,6 +106,7 @@ class FriendRequestsService {
           {
             'email': currentUserEmail, // email của người dùng hiện tại
             'username': Display, // Tên của người dùng hiện tại
+            'profile_image': currentProfileImage, // Ảnh đại diện của người dùng hiện tại
           }
         ])
       });
@@ -124,12 +127,12 @@ class FriendRequestsService {
         return;
       }
 
-      String currentUserEmail = currentUser.email ?? '';
+      String currentUserUid = currentUser.uid ;
 
       // Xóa yêu cầu kết bạn khỏi FriendRequests
       await FirebaseFirestore.instance
           .collection('FriendRequests')
-          .doc(currentUserEmail)
+          .doc(currentUserUid)
           .update({
         'requests': FieldValue.arrayRemove([friendRequest])
       });

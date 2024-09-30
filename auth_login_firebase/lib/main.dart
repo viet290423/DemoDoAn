@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
         '/home_page' : (context) => HomePage(),
         '/camera_page' : (context) => CameraPage(cameras: cameras,),
         '/profile_page' : (context) => ProfilePage(),
-        '/users_page' : (context) => const UsersPage(),
+        '/users_page' : (context) =>  UsersPage(),
         '/notification_page': (context) =>  NotificationPage(),
         '/auth_page': (context) => const AuthPage(),
         

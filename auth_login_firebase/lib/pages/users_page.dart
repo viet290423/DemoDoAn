@@ -1,106 +1,66 @@
-import 'package:auth_login_firebase/components/my_back_button.dart';
-import 'package:auth_login_firebase/components/my_list_title.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class UsersPage extends StatelessWidget {
-  const UsersPage({super.key});
+class UsersPage extends StatefulWidget {
+  @override
+  _UsersPageState createState() => _UsersPageState();
+}
+
+class _UsersPageState extends State<UsersPage> {
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+  List<Map<String, dynamic>> friendsList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (currentUser != null) {
+      _loadFriendsList();
+    }
+  }
+
+  Future<void> _loadFriendsList() async {
+    try {
+      // Lấy thông tin người dùng hiện tại từ Firestore
+      DocumentSnapshot<Map<String, dynamic>> userDoc =
+          await FirebaseFirestore.instance
+              .collection('User')
+              .doc(currentUser!.email) // Sử dụng email làm ID của tài liệu
+              .get();
+
+      if (userDoc.exists) {
+        List<dynamic> friends = userDoc.data()?['listFriend'] ?? [];
+        setState(() {
+          friendsList = friends.cast<Map<String, dynamic>>();
+        });
+      } else {
+        debugPrint('Không tìm thấy thông tin người dùng.');
+      }
+    } catch (e) {
+      debugPrint('Lỗi khi lấy danh sách bạn bè: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   centerTitle: true,
-      //   foregroundColor: Colors.white,
-      //   title: const Text(
-      //     "Users",
-      //     style: TextStyle(
-      //       color: Colors.orange,
-      //       fontSize: 24,
-      //       fontWeight: FontWeight.bold,
-      //     ),
-      //   ),
-      //   backgroundColor: Colors.black,
-      // ),
-      body: StreamBuilder(
-        stream: FirebaseFirestore.instance.collection("User").snapshots(),
-        builder: (context, snapshot) {
-          //any error
-          if (snapshot.hasError) {
-            return const Text("Something went wrong");
-          }
-          // show loading circle
-          else if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-            // ignore: unnecessary_null_comparison
-          } else if (snapshot.hasData == null) {
-            return const Text("No data");
-          }
-
-          // get all users
-          final users = snapshot.data!.docs;
-          return Column(
-            children: [
-              const Padding(
-                padding: const EdgeInsets.only(top: 50, left: 25),
-                child: Row(
-                  children: [
-                    MyBackButton(),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: users.length,
-                  itemBuilder: (context, index) {
-                    // get individual user
-                    final user = users[index];
-
-                    String username = user['username'];
-                    // String email = user['email'];
-
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 10, right: 30, left: 30, bottom: 10),
-                      child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundImage: user.data().containsKey('profile_image') && user['profile_image'] != null
-                                  ? NetworkImage(user['profile_image'])
-                                  : null,
-                              radius: 25,
-                              child: !user.data().containsKey('profile_image') || user['profile_image'] == null
-                                  ? const Icon(Icons.person, size: 32)
-                                  : null,
-                            ),
-                            const SizedBox(width: 10),
-                            SizedBox(
-                              height: 25,
-                              child: Text(
-                                username,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 20,
-                                  fontFamily: 'Montserrat',
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      ],
-                    ),);
-                  },
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+      appBar: AppBar(title: Text('Danh sách bạn bè')),
+      body: friendsList.isEmpty
+          ? Center(child: Text('Chưa có bạn bè nào.'))
+          : ListView.builder(
+              itemCount: friendsList.length,
+              itemBuilder: (context, index) {
+                Map<String, dynamic> friend = friendsList[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(
+                        friend['profile_image'] ?? 'default_profile_image_url'),
+                  ),
+                  title: Text(friend['username']),
+                  subtitle: Text(friend['email']),
+                );
+              },
+            ),
     );
   }
 }

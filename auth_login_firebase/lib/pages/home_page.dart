@@ -2,7 +2,6 @@ import 'package:auth_login_firebase/components/my_drawer.dart';
 import 'package:auth_login_firebase/components/my_list_title.dart';
 import 'package:auth_login_firebase/components/search_friend.dart';
 import 'package:auth_login_firebase/database/firestore.dart';
-import 'package:auth_login_firebase/database/searchFriend.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
