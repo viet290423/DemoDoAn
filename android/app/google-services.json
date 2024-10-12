@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "849600736150",
+    "project_id": "authtutorial-cfc9e",
+    "storage_bucket": "authtutorial-cfc9e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:849600736150:android:a325f8b49bacd4acc78bb7",
+        "android_client_info": {
+          "package_name": "com.example.auth_login_firebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB22l2qHoRJdbku7csk8OLj3XCsJAZbUvY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
