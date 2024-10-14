@@ -1,3 +1,4 @@
+import 'package:auth_login_firebase/pages/chat_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +22,11 @@ class _UsersPageState extends State<UsersPage> {
 
   Future<void> _loadFriendsList() async {
     try {
-      // Lấy thông tin người dùng hiện tại từ Firestore
+      // Lấy thông tin người dùng từ Firestore
       DocumentSnapshot<Map<String, dynamic>> userDoc =
           await FirebaseFirestore.instance
               .collection('User')
-              .doc(currentUser!.email) // Sử dụng email làm ID của tài liệu
+              .doc(currentUser!.email) // Sử dụng email làm ID tài liệu
               .get();
 
       if (userDoc.exists) {
@@ -58,6 +59,18 @@ class _UsersPageState extends State<UsersPage> {
                   ),
                   title: Text(friend['username']),
                   subtitle: Text(friend['email']),
+                  trailing: IconButton(
+                    icon: Icon(Icons.chat),
+                    onPressed: () {
+                      // Chuyển đến trang chat với thông tin bạn bè
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatPage(receiverEmail: '', receiverID: '',),
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             ),
