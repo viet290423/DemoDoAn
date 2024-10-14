@@ -2,6 +2,7 @@ import 'package:auth_login_firebase/auth/auth_page.dart';
 import 'package:auth_login_firebase/auth/login_or_register_page.dart';
 import 'package:auth_login_firebase/auth/login_page.dart';
 import 'package:auth_login_firebase/pages/camera_page.dart';
+import 'package:auth_login_firebase/pages/home_chat_page.dart';
 import 'package:auth_login_firebase/pages/home_page.dart';
 import 'package:auth_login_firebase/pages/notification_page.dart';
 import 'package:auth_login_firebase/pages/profile_page.dart';
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
         '/profile_page' : (context) => ProfilePage(),
         '/users_page' : (context) =>  UsersPage(),
         '/notification_page': (context) =>  NotificationPage(),
+        '/home_chat_page' : (context) => HomeChatPage(),
         '/auth_page': (context) => const AuthPage(),
         
       },

@@ -52,4 +52,8 @@ class AuthService {
       }
     }
   }
+  // Lấy thông tin người dùng hiện tại
+  User? getCurrentUser() {
+    return FirebaseAuth.instance.currentUser;
+  }
 }

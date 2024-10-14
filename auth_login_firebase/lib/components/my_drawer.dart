@@ -129,6 +129,21 @@ class MyDrawer extends StatelessWidget {
                   },
                 ),
               ),
+
+              Padding(
+                padding: const EdgeInsets.only(left: 25),
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.chat_bubble,
+                    color: Colors.black,
+                  ),
+                  title: Text("C H A T"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/home_chat_page');
+                  },
+                ),
+              ),
             ],
           ),
           // logout title

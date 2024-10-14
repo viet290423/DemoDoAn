@@ -3,9 +3,38 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ChatService {
-  // Khởi tạo instance của Firestore và FirebaseAuth
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Phương thức lấy danh sách bạn bè
+  Stream<List<Map<String, dynamic>>> getFriendsStream() async* {
+    final String currentUserID = _auth.currentUser!.uid;
+
+    // Lấy danh sách bạn bè của người dùng hiện tại từ Firestore
+    DocumentSnapshot<Map<String, dynamic>> userDoc = await _firestore
+        .collection('User')
+        .doc(currentUserID)
+        .get();
+
+    if (userDoc.exists) {
+      List<dynamic> friendsIDs = userDoc.data()?['listFriend'] ?? [];
+
+      // Stream danh sách người dùng là bạn bè
+      yield* _firestore
+          .collection('User')
+          .where('uid', whereIn: friendsIDs)
+          .snapshots()
+          .map((snapshot) {
+        return snapshot.docs.map((doc) {
+          // Chuyển đổi dữ liệu thành Map
+          final user = doc.data() as Map<String, dynamic>;
+          return user;
+        }).toList();
+      });
+    } else {
+      yield [];
+    }
+  }
 
   // Phương thức lấy danh sách người dùng
   Stream<List<Map<String, dynamic>>> getUsersStream() {
@@ -27,21 +56,21 @@ class ChatService {
     final String currentUserEmail = _auth.currentUser!.email!;
     final Timestamp timestamp = Timestamp.now();
 
-    // Tạo một tin nhắn mới
+    // Tạo tin nhắn mới
     Message newMessage = Message(
-      senderID: currentUserID, // Sử dụng ID của người gửi
-      senderEmail: currentUserEmail, // Email của người gửi
-      receiverID: receiverID, // ID của người nhận
-      message: message, // Nội dung tin nhắn
-      timestamp: timestamp, // Thời gian gửi
+      senderID: currentUserID,
+      senderEmail: currentUserEmail,
+      receiverID: receiverID,
+      message: message,
+      timestamp: timestamp,
     );
 
-    // Tạo ID cho phòng chat giữa hai người dùng
+    // Tạo ID cho phòng chat giữa hai người
     List<String> ids = [currentUserID, receiverID];
-    ids.sort(); // Sắp xếp ID để đảm bảo ID phòng chat nhất quán
+    ids.sort(); // Sắp xếp để đảm bảo tính nhất quán
     String chatRoomID = ids.join('_');
 
-    // Thêm tin nhắn mới vào cơ sở dữ liệu
+    // Thêm tin nhắn vào cơ sở dữ liệu
     await _firestore
         .collection("chat_rooms")
         .doc(chatRoomID)
@@ -51,7 +80,7 @@ class ChatService {
 
   // Phương thức nhận tin nhắn
   Stream<QuerySnapshot> getMessages(String userID, String otherUserID) {
-    // Tạo ID cho phòng chat giữa hai người dùng
+    // Tạo ID phòng chat giữa hai người dùng
     List<String> ids = [userID, otherUserID];
     ids.sort();
     String chatRoomID = ids.join('_');
@@ -59,9 +88,10 @@ class ChatService {
     return _firestore
         .collection("chat_rooms")
         .doc(chatRoomID)
-        .collection("messages") // Chỉnh sửa thành "messages"
-        .orderBy("timestamp", descending: false) // Đảm bảo trường đúng tên là "timestamp"
+        .collection("messages")
+        .orderBy("timestamp", descending: false)
         .snapshots();
   }
 }
+
 
