@@ -41,15 +41,15 @@ class HomePage extends StatelessWidget {
               showSearch(
                 context: context,
                 delegate:
-                    FriendSearchDelegate(), // Sử dụng lớp FriendSearchDelegate
+                FriendSearchDelegate(), // Sử dụng lớp FriendSearchDelegate
               );
             },
           ),
         ],
       ),
       drawer: const MyDrawer(),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: database.getPostsStream(),
+      body: StreamBuilder<List<DocumentSnapshot>>(
+        stream: database.getAllPostsStream(), // Thay bằng stream lấy bài đăng từ người dùng và bạn bè
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -66,7 +66,7 @@ class HomePage extends StatelessWidget {
             );
           }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
               child: Padding(
                 padding: EdgeInsets.all(25),
@@ -75,7 +75,7 @@ class HomePage extends StatelessWidget {
             );
           }
 
-          final posts = snapshot.data!.docs;
+          final posts = snapshot.data!;
 
           return ListView.builder(
             itemCount: posts.length,

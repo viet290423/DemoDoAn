@@ -1,3 +1,5 @@
+import 'package:auth_login_firebase/database/firestore.dart';
+import 'package:auth_login_firebase/pages/comment.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -28,6 +30,7 @@ class _MyListTitleState extends State<MyListTitle>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
+
 
   @override
   Widget build(BuildContext context) {
@@ -60,27 +63,21 @@ class _MyListTitleState extends State<MyListTitle>
 
   Widget _buildPostContent(
       BuildContext context, Map<String, dynamic>? user, String formattedTime) {
-    void _removePost() async {
+    void _removePost(String postId) async {
       try {
-        await FirebaseFirestore.instance
-            .collection('Posts')
-            .doc(widget.postId)  // Xóa dựa trên postId
-            .delete();
+        await FirestoreDatabase().removePost(postId);
 
-        // Hiển thị thông báo thành công hoặc điều hướng sau khi xóa
+        // Hiển thị thông báo thành công
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Post removed successfully')),
+          const SnackBar(content: Text('Post removed successfully')),
         );
       } catch (e) {
-        print('Error removing post: $e');
         // Hiển thị thông báo lỗi nếu có
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error removing post')),
+          const SnackBar(content: Text('Error removing post')),
         );
       }
     }
-
-
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
@@ -161,11 +158,11 @@ class _MyListTitleState extends State<MyListTitle>
                         print("Edit selected");
                       } else if (value == 'Remove') {
                         // Xử lý khi chọn Remove (xóa bài post)
-                        _removePost();  // Gọi hàm để xóa post
+                        _removePost(widget.postId);  // Gọi hàm để xóa post
                       }
                     },
                     itemBuilder: (context) => [
-                      PopupMenuItem(
+                      const PopupMenuItem(
                         value: 'Edit',
                         child: Row(
                           children: [
@@ -181,7 +178,7 @@ class _MyListTitleState extends State<MyListTitle>
                           ],
                         ),
                       ),
-                      PopupMenuItem(
+                      const PopupMenuItem(
                         value: 'Remove',
                         child: Row(
                           children: [
@@ -262,7 +259,22 @@ class _MyListTitleState extends State<MyListTitle>
     return IconButton(
       icon: const Icon(Icons.comment),
       onPressed: () {
-        print("Commented");
+        _showCommentBottomSheet(context);
+        // Navigator.push(context,
+        // MaterialPageRoute(builder: (context) => CommentPage(postId: widget.postId, postUserEmail: widget.userEmail, postUserName: widget.userName,)));
+      },
+    );
+  }
+
+  void _showCommentBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
+      builder: (BuildContext context) {
+        return CommentBottomSheet(postId: widget.postId, postUserEmail: widget.userEmail, postUserName: widget.userName,);
       },
     );
   }
